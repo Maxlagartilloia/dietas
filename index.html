@@ -525,12 +525,12 @@
                 const recipeContent = document.getElementById('recipe-content-container');
                 const doc = new jsPDF();
 
-                html2canvas(recipeContent).then(canvas => {
+                html2canvas(recipeContent, { scale: 2 }).then(canvas => {
                     const imgData = canvas.toDataURL('image/png');
                     const imgProps= doc.getImageProperties(imgData);
-                    const pdfWidth = doc.internal.pageSize.getWidth();
+                    const pdfWidth = doc.internal.pageSize.getWidth() - 20; // Margins
                     const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-                    doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                    doc.addImage(imgData, 'PNG', 10, 10, pdfWidth, pdfHeight);
                     doc.save(`recetario-${state.selectedDate}.pdf`);
                 });
             }
