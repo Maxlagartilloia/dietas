@@ -31,7 +31,7 @@
             transition: max-height 0.5s ease-in-out;
         }
         .details-content.open {
-            max-height: 1000px; /* Adjust as needed */
+            max-height: 1000px;
         }
     </style>
 </head>
@@ -39,7 +39,7 @@
 
     <!-- Modal de Metas -->
     <div id="goal-modal" class="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4 hidden">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-2xl transform transition-all">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-2xl transform transition-all overflow-y-auto max-h-screen">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-gray-800">Define Tus Metas</h2>
                 <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-7 h-7"></i></button>
@@ -82,16 +82,20 @@
                     Calcular Mis Metas
                 </button>
             </div>
-            <div id="modal-results" class="hidden">
+            <div id="modal-results-container" class="hidden">
                  <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-200">
                     <h3 class="text-xl font-bold text-emerald-800 mb-4 text-center">Tus Objetivos Diarios</h3>
-                    <div id="modal-results-content" class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                    </div>
-                    <div class="mt-6 flex justify-center">
-                         <button id="save-goals-btn" class="bg-blue-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-600 transition-colors">
-                            Guardar y Usar Metas
-                        </button>
-                    </div>
+                    <div id="modal-results-content" class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center"></div>
+                </div>
+                <!-- Nueva sección de explicación -->
+                <div class="mt-6 bg-gray-50 p-6 rounded-xl border border-gray-200">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Entiende tu Objetivo</h3>
+                    <div id="modal-explanation-content" class="text-sm text-gray-700 space-y-3"></div>
+                </div>
+                 <div class="mt-6 flex justify-center">
+                     <button id="save-goals-btn" class="bg-blue-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-600 transition-colors">
+                        Guardar y Usar Metas
+                    </button>
                 </div>
             </div>
         </div>
@@ -131,7 +135,6 @@
     </header>
 
     <main id="main-content" class="container mx-auto p-4 md:p-8">
-        <!-- Nueva sección de Principios Clave -->
         <div class="mb-10 bg-white p-6 rounded-xl shadow-md border border-gray-100">
             <button id="toggle-principles-btn" class="w-full flex justify-between items-center text-left">
                 <h2 class="text-2xl font-bold text-gray-800">Principios Clave para tu Éxito</h2>
@@ -139,17 +142,15 @@
             </button>
             <div id="principles-content" class="details-content mt-4 text-gray-600">
                 <ul class="space-y-4">
-                    <li class="flex items-start"><i data-lucide="shield-check" class="w-5 h-5 mr-3 text-emerald-500 mt-1"></i><span><strong class="font-semibold text-gray-700">Equilibrio de Macronutrientes:</strong> Prioriza las proteínas (1.6-2.2 g/kg de peso) para construir músculo, carbohidratos complejos (quinua, morocho, yuca) para energía sostenida y grasas saludables (aguacate, nueces) para la función hormonal.</span></li>
-                    <li class="flex items-start"><i data-lucide="droplets" class="w-5 h-5 mr-3 text-blue-500 mt-1"></i><span><strong class="font-semibold text-gray-700">Hidratación Constante:</strong> Bebe al menos 2 litros de agua al día. Es vital para el rendimiento muscular y el metabolismo.</span></li>
-                    <li class="flex items-start"><i data-lucide="bed-double" class="w-5 h-5 mr-3 text-indigo-500 mt-1"></i><span><strong class="font-semibold text-gray-700">Descanso Reparador:</strong> Dormir 7-9 horas es crucial. El descanso optimiza las hormonas que regulan el hambre y favorecen el crecimiento muscular.</span></li>
-                    <li class="flex items-start"><i data-lucide="dumbbell" class="w-5 h-5 mr-3 text-red-500 mt-1"></i><span><strong class="font-semibold text-gray-700">Actividad Física Combinada:</strong> Acompaña tu dieta con ejercicios de fuerza (pesas, CrossFit) y cardio (caminar, trotar) para maximizar la quema de grasa y la ganancia de músculo.</span></li>
-                    <li class="flex items-start"><i data-lucide="ban" class="w-5 h-5 mr-3 text-gray-500 mt-1"></i><span><strong class="font-semibold text-gray-700">Evita lo que no te suma:</strong> Limita al máximo los azúcares añadidos, alimentos ultraprocesados, frituras y alcohol. Aportan calorías vacías y dificultan tus objetivos.</span></li>
-                    <li class="flex items-start"><i data-lucide="stethoscope" class="w-5 h-5 mr-3 text-teal-500 mt-1"></i><span><strong class="font-semibold text-gray-700">Consulta Profesional:</strong> Estas son guías excelentes, pero un nutricionista puede crear un plan perfectamente adaptado a ti.</span></li>
+                    <li class="flex items-start"><i data-lucide="shield-check" class="w-5 h-5 mr-3 text-emerald-500 mt-1 shrink-0"></i><span><strong class="font-semibold text-gray-700">Equilibrio de Macronutrientes:</strong> Prioriza las proteínas (1.6-2.2 g/kg de peso) para construir músculo, carbohidratos complejos (quinua, morocho, yuca) para energía sostenida y grasas saludables (aguacate, nueces) para la función hormonal.</span></li>
+                    <li class="flex items-start"><i data-lucide="droplets" class="w-5 h-5 mr-3 text-blue-500 mt-1 shrink-0"></i><span><strong class="font-semibold text-gray-700">Hidratación Constante:</strong> Bebe al menos 2 litros de agua al día. Es vital para el rendimiento muscular y el metabolismo.</span></li>
+                    <li class="flex items-start"><i data-lucide="bed-double" class="w-5 h-5 mr-3 text-indigo-500 mt-1 shrink-0"></i><span><strong class="font-semibold text-gray-700">Descanso Reparador:</strong> Dormir 7-9 horas es crucial. El descanso optimiza las hormonas que regulan el hambre y favorecen el crecimiento muscular.</span></li>
+                    <li class="flex items-start"><i data-lucide="dumbbell" class="w-5 h-5 mr-3 text-red-500 mt-1 shrink-0"></i><span><strong class="font-semibold text-gray-700">Actividad Física Combinada:</strong> Acompaña tu dieta con ejercicios de fuerza (pesas, CrossFit) y cardio (caminar, trotar) para maximizar la quema de grasa y la ganancia de músculo.</span></li>
+                    <li class="flex items-start"><i data-lucide="ban" class="w-5 h-5 mr-3 text-gray-500 mt-1 shrink-0"></i><span><strong class="font-semibold text-gray-700">Evita lo que no te suma:</strong> Limita al máximo los azúcares añadidos, alimentos ultraprocesados, frituras y alcohol. Aportan calorías vacías y dificultan tus objetivos.</span></li>
+                    <li class="flex items-start"><i data-lucide="stethoscope" class="w-5 h-5 mr-3 text-teal-500 mt-1 shrink-0"></i><span><strong class="font-semibold text-gray-700">Consulta Profesional:</strong> Estas son guías excelentes, pero un nutricionista puede crear un plan perfectamente adaptado a ti.</span></li>
                 </ul>
             </div>
         </div>
-
-        <!-- Las secciones de comida se renderizarán aquí -->
     </main>
 
     <footer class="text-center py-8 px-4">
@@ -179,19 +180,23 @@
                 "Cada comida es una oportunidad para nutrir tu cuerpo.", "El éxito es la suma de pequeños esfuerzos repetidos día tras día."
             ];
 
-            const suggestionMenus = {
-                desayuno: [
-                    { 'Grasas Saludables': [{ name: 'Aguacate', portion: '1/4 mediano' }, { name: 'Maní', portion: '2 cdas' }, { name: 'Nueces', portion: '5 unidades' }, { name: 'Semillas de Chía', portion: '1 cda' }, { name: 'Aceite de Coco', portion: '1 cdta' }], 'Proteínas': [{ name: 'Huevo', portion: '2 unidades' }, { name: 'Yogur Natural', portion: '1 taza' }, { name: 'Queso Fresco', portion: '2 rebanadas' }, { name: 'Chochos', portion: '1/2 taza' }, { name: 'Leche', portion: '1 vaso' }], 'Verduras': [{ name: 'Frutillas', portion: '1 taza' }, { name: 'Babaco', portion: '1 rodaja' }, { name: 'Avena', portion: '1/2 taza' }, { name: 'Granadilla', portion: '2 unidades' }, { name: 'Naranjilla', portion: '2 unidades' }] },
-                    { 'Grasas Saludables': [{ name: 'Almendras', portion: '10 unidades' }, { name: 'Nueces de Macadamia', portion: '5 unidades' }, { name: 'Sacha Inchi', portion: '1 cda' }, { name: 'Aguacate', portion: '1/4 mediano' }, { name: 'Aceite de Oliva', portion: '1 cda' }], 'Proteínas': [{ name: 'Huevo', portion: '2 unidades' }, { name: 'Queso Fresco', portion: '2 rebanadas' }, { name: 'Yogur Natural', portion: '1 taza' }, { name: 'Leche', portion: '1 vaso' }, { name: 'Chochos', portion: '1/2 taza' }], 'Verduras': [{ name: 'Tomate de Árbol', portion: '1 unidad' }, { name: 'Avena', portion: '1/2 taza' }, { name: 'Papaya', portion: '1 taza' }, { name: 'Piña', portion: '1 rodaja' }, { name: 'Maracuyá', portion: '2 unidades' }] }
-                ],
-                almuerzo: [
-                    { 'Grasas Saludables': [{ name: 'Aguacate', portion: '1/4 mediano' }, { name: 'Sacha Inchi', portion: '1 cda' }, { name: 'Aceite de Oliva', portion: '1 cda' }, { name: 'Maní', portion: '2 cdas' }, { name: 'Nueces', portion: '5 unidades' }], 'Proteínas': [{ name: 'Pollo', portion: '1 filete (120g)' }, { name: 'Quinua', portion: '1 taza cocida' }, { name: 'Lenteja Serrana', portion: '1 taza cocida' }, { name: 'Trucha', portion: '1 filete (150g)' }, { name: 'Fréjol', portion: '1 taza cocida' }], 'Verduras': [{ name: 'Brócoli', portion: '1 taza' }, { name: 'Zanahoria', portion: '1/2 taza' }, { name: 'Acelga', portion: '2 tazas' }, { name: 'Morocho partido', portion: '1/2 taza' }, { name: 'Lechuga', portion: '2 tazas' }] },
-                    { 'Grasas Saludables': [{ name: 'Aceite de Coco', portion: '1 cdta' }, { name: 'Aguacate', portion: '1/4 mediano' }, { name: 'Nueces de Macadamia', portion: '5 unidades' }, { name: 'Almendras', portion: '10 unidades' }, { name: 'Semillas de Chía', portion: '1 cda' }], 'Proteínas': [{ name: 'Pescado (Corvina)', portion: '1 filete (150g)' }, { name: 'Chochos', portion: '1 taza' }, { name: 'Garbanzo', portion: '1 taza cocida' }, { name: 'Pollo', portion: '1 filete (120g)' }, { name: 'Tofu', portion: '150g' }], 'Verduras': [{ name: 'Yuca', portion: '1/2 taza' }, { name: 'Pimiento', portion: '1/2 unidad' }, { name: 'Tomate', portion: '1 unidad' }, { name: 'Batata (Camote)', portion: '1/2 taza' }, { name: 'Pepino', portion: '1 taza' }] }
-                ],
-                cena: [
-                    { 'Grasas Saludables': [{ name: 'Aceite de Oliva', portion: '1 cda' }, { name: 'Aguacate', portion: '1/4 mediano' }, { name: 'Almendras', portion: '8 unidades' }, { name: 'Nueces', portion: '4 unidades' }, { name: 'Semillas de Chía', portion: '1 cda' }], 'Proteínas': [{ name: 'Camarones', portion: '150g' }, { name: 'Huevo', portion: '2 unidades' }, { name: 'Pollo', portion: '1/2 filete (80g)' }, { name: 'Tofu', portion: '120g' }, { name: 'Queso Fresco', portion: '1 rebanada' }], 'Verduras': [{ name: 'Espinaca', portion: '2 tazas' }, { name: 'Calabacín', portion: '1 taza' }, { name: 'Pimiento', portion: '1/2 unidad' }, { name: 'Brócoli', portion: '1 taza' }, { name: 'Tomate', portion: '1 unidad' }] },
-                    { 'Grasas Saludables': [{ name: 'Aguacate', portion: '1/4 mediano' }, { name: 'Maní', portion: '1 cda' }, { name: 'Sacha Inchi', portion: '1 cdta' }, { name: 'Aceite de Coco', portion: '1 cdta' }, { name: 'Nueces de Macadamia', portion: '4 unidades' }], 'Proteínas': [{ name: 'Trucha', portion: '1 filete (120g)' }, { name: 'Lenteja Serrana', portion: '3/4 taza' }, { name: 'Huevo', portion: '2 unidades' }, { name: 'Chochos', portion: '1/2 taza' }, { name: 'Pescado (Corvina)', portion: '1 filete (120g)' }], 'Verduras': [{ name: 'Melloco', portion: '1/2 taza' }, { name: 'Zanahoria', portion: '1/2 taza' }, { name: 'Acelga', portion: '2 tazas' }, { name: 'Pepino', portion: '1 taza' }, { name: 'Cebolla', portion: '1/4 taza' }] }
-                ]
+            // Bancos de ingredientes separados y más grandes para máxima variedad
+            const ingredientPools = {
+                desayuno: {
+                    'Grasas Saludables': [{ name: 'Aguacate', portion: '1/4 mediano' }, { name: 'Maní', portion: '2 cdas' }, { name: 'Nueces', portion: '5 unidades' }, { name: 'Semillas de Chía', portion: '1 cda' }, { name: 'Almendras', portion: '10 unidades' }, { name: 'Sacha Inchi', portion: '1 cda' }],
+                    'Proteínas': [{ name: 'Huevo', portion: '2 unidades' }, { name: 'Yogur Natural', portion: '1 taza' }, { name: 'Queso Fresco', portion: '2 rebanadas' }, { name: 'Leche', portion: '1 vaso' }],
+                    'Verduras': [{ name: 'Frutillas', portion: '1 taza' }, { name: 'Babaco', portion: '1 rodaja' }, { name: 'Avena', portion: '1/2 taza' }, { name: 'Granadilla', portion: '2 unidades' }, { name: 'Naranjilla', portion: '2 unidades' }, { name: 'Papaya', portion: '1 taza' }, { name: 'Tomate de Árbol', portion: '1 unidad' }, { name: 'Maracuyá', portion: '2 unidades' }]
+                },
+                almuerzo: {
+                    'Grasas Saludables': [{ name: 'Aceite de Oliva', portion: '1 cda' }, { name: 'Nueces de Macadamia', portion: '5 unidades' }, { name: 'Maní Tostado', portion: '2 cdas' }],
+                    'Proteínas': [{ name: 'Pollo', portion: '1 filete (120g)' }, { name: 'Lenteja Serrana', portion: '1 taza cocida' }, { name: 'Trucha', portion: '1 filete (150g)' }, { name: 'Fréjol', portion: '1 taza cocida' }, { name: 'Pescado (Corvina)', portion: '1 filete (150g)' }, { name: 'Carne Magra', portion: '1 filete (120g)' }, { name: 'Garbanzo', portion: '1 taza cocida' }],
+                    'Verduras': [{ name: 'Brócoli', portion: '1 taza' }, { name: 'Zanahoria', portion: '1/2 taza' }, { name: 'Acelga', portion: '2 tazas' }, { name: 'Morocho partido', portion: '1/2 taza' }, { name: 'Lechuga', portion: '2 tazas' }, { name: 'Yuca', portion: '1/2 taza' }, { name: 'Batata (Camote)', portion: '1/2 taza' }, { name: 'Mote', portion: '1/2 taza' }, { name: 'Quinua', portion: '1 taza cocida' }]
+                },
+                cena: {
+                    'Grasas Saludables': [{ name: 'Aceite de Coco', portion: '1 cdta' }, { name: 'Aguacate', portion: '1/8 mediano' }, { name: 'Almendras', portion: '5 unidades' }],
+                    'Proteínas': [{ name: 'Camarones', portion: '150g' }, { name: 'Tofu', portion: '120g' }, { name: 'Chochos', portion: '1 taza' }, { name: 'Pechuga de Pavo', portion: '100g' }],
+                    'Verduras': [{ name: 'Espinaca', portion: '2 tazas' }, { name: 'Calabacín', portion: '1 taza' }, { name: 'Pimiento', portion: '1/2 unidad' }, { name: 'Melloco', portion: '1/2 taza' }, { name: 'Pepino', portion: '1 taza' }, { name: 'Tomate', portion: '1 unidad' }]
+                }
             };
 
             function formatDate(date) {
@@ -219,54 +224,39 @@
                 const savedState = localStorage.getItem('dietAppState');
                 if (savedState) {
                     state = JSON.parse(savedState);
-                    if (!localStorage.getItem('hasLoadedBeforeV3')) {
+                    if (!localStorage.getItem('hasLoadedBeforeV6')) {
                         state.selectedDate = formatDate(new Date());
-                        localStorage.setItem('hasLoadedBeforeV3', 'true');
+                        localStorage.setItem('hasLoadedBeforeV6', 'true');
                     }
                 }
             }
             
+            function getDailySuggestions(dayOfYear) {
+                const suggestions = { desayuno: {}, almuerzo: {}, cena: {}, snacks: {} };
+                for (const mealKey in ingredientPools) {
+                    suggestions[mealKey] = {};
+                    for (const categoryKey in ingredientPools[mealKey]) {
+                        const pool = ingredientPools[mealKey][categoryKey];
+                        const shuffled = [...pool].sort((a, b) => {
+                            const seed = dayOfYear + categoryKey.charCodeAt(0) + mealKey.charCodeAt(0);
+                            return (a.name.charCodeAt(0) * seed) % 13 - (b.name.charCodeAt(0) * seed) % 13;
+                        });
+                        suggestions[mealKey][categoryKey] = shuffled.slice(0, 5);
+                    }
+                }
+                suggestions.snacks = suggestions.desayuno;
+                return suggestions;
+            }
+
             function render() {
                 document.getElementById('date-picker').value = state.selectedDate;
                 const dayOfYear = getDayOfYear(new Date(`${state.selectedDate}T12:00:00`));
-                
-                const breakfastIndex = dayOfYear % suggestionMenus.desayuno.length;
-                const lunchIndex = (dayOfYear + 1) % suggestionMenus.almuerzo.length;
-                const dinnerIndex = (dayOfYear + 2) % suggestionMenus.cena.length;
-
-                const dailySuggestions = {
-                    desayuno: suggestionMenus.desayuno[breakfastIndex],
-                    almuerzo: suggestionMenus.almuerzo[lunchIndex],
-                    cena: suggestionMenus.cena[dinnerIndex],
-                    snacks: suggestionMenus.desayuno[breakfastIndex]
-                };
+                const dailySuggestions = getDailySuggestions(dayOfYear);
 
                 const mainContent = document.getElementById('main-content');
-                const principlesSection = mainContent.querySelector('.mb-10.bg-white'); // Preserve the principles section
-                mainContent.innerHTML = ''; // Clear only meal sections
-                if (principlesSection) {
-                    mainContent.appendChild(principlesSection);
-                } else {
-                    // If it doesn't exist, create it (first render)
-                    const principlesHTML = `
-                        <div class="mb-10 bg-white p-6 rounded-xl shadow-md border border-gray-100">
-                            <button id="toggle-principles-btn" class="w-full flex justify-between items-center text-left">
-                                <h2 class="text-2xl font-bold text-gray-800">Principios Clave para tu Éxito</h2>
-                                <i data-lucide="chevron-down" id="principles-arrow" class="w-6 h-6 transition-transform"></i>
-                            </button>
-                            <div id="principles-content" class="details-content mt-4 text-gray-600">
-                                <ul class="space-y-4">
-                                    <li class="flex items-start"><i data-lucide="shield-check" class="w-5 h-5 mr-3 text-emerald-500 mt-1 shrink-0"></i><span><strong class="font-semibold text-gray-700">Equilibrio de Macronutrientes:</strong> Prioriza las proteínas (1.6-2.2 g/kg de peso) para construir músculo, carbohidratos complejos (quinua, morocho, yuca) para energía sostenida y grasas saludables (aguacate, nueces) para la función hormonal.</span></li>
-                                    <li class="flex items-start"><i data-lucide="droplets" class="w-5 h-5 mr-3 text-blue-500 mt-1 shrink-0"></i><span><strong class="font-semibold text-gray-700">Hidratación Constante:</strong> Bebe al menos 2 litros de agua al día. Es vital para el rendimiento muscular y el metabolismo.</span></li>
-                                    <li class="flex items-start"><i data-lucide="bed-double" class="w-5 h-5 mr-3 text-indigo-500 mt-1 shrink-0"></i><span><strong class="font-semibold text-gray-700">Descanso Reparador:</strong> Dormir 7-9 horas es crucial. El descanso optimiza las hormonas que regulan el hambre y favorecen el crecimiento muscular.</span></li>
-                                    <li class="flex items-start"><i data-lucide="dumbbell" class="w-5 h-5 mr-3 text-red-500 mt-1 shrink-0"></i><span><strong class="font-semibold text-gray-700">Actividad Física Combinada:</strong> Acompaña tu dieta con ejercicios de fuerza (pesas, CrossFit) y cardio (caminar, trotar) para maximizar la quema de grasa y la ganancia de músculo.</span></li>
-                                    <li class="flex items-start"><i data-lucide="ban" class="w-5 h-5 mr-3 text-gray-500 mt-1 shrink-0"></i><span><strong class="font-semibold text-gray-700">Evita lo que no te suma:</strong> Limita al máximo los azúcares añadidos, alimentos ultraprocesados, frituras y alcohol. Aportan calorías vacías y dificultan tus objetivos.</span></li>
-                                    <li class="flex items-start"><i data-lucide="stethoscope" class="w-5 h-5 mr-3 text-teal-500 mt-1 shrink-0"></i><span><strong class="font-semibold text-gray-700">Consulta Profesional:</strong> Estas son guías excelentes, pero un nutricionista puede crear un plan perfectamente adaptado a ti.</span></li>
-                                </ul>
-                            </div>
-                        </div>`;
-                    mainContent.innerHTML = principlesHTML;
-                }
+                const principlesSection = mainContent.querySelector('.mb-10.bg-white');
+                mainContent.innerHTML = '';
+                if (principlesSection) mainContent.appendChild(principlesSection);
                 
                 mainContent.innerHTML += `
                     ${renderMealSection('Desayuno', dailySuggestions.desayuno)}
@@ -292,7 +282,7 @@
                             <h2 class="text-2xl md:text-3xl font-bold text-gray-800">${mealName}</h2>
                             <div class="flex items-center gap-4">
                                 <button class="generate-image-btn bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm font-semibold flex items-center" data-meal-key="${mealKey}">
-                                    <i data-lucide="image" class="w-4 h-4 mr-2"></i>Ver Plato Sugerido
+                                    <i data-lucide="image" class="w-4 h-4 mr-2"></i>Ver Mi Plato
                                 </button>
                                 <div class="flex items-center text-emerald-600 font-bold">
                                     <i data-lucide="flame" class="w-6 h-6 mr-2"></i>
@@ -359,17 +349,17 @@
                 if (!container) return;
 
                 container.classList.remove('hidden');
-                container.innerHTML = '<div class="loader"></div>';
-
-                const dayOfYear = getDayOfYear(new Date(`${state.selectedDate}T12:00:00`));
-                const suggestions = suggestionMenus[mealKey][(dayOfYear + (mealKey === 'almuerzo' ? 1 : mealKey === 'cena' ? 2 : 0)) % suggestionMenus[mealKey].length];
                 
-                const protein = suggestions['Proteínas'][0].name;
-                const fat = suggestions['Grasas Saludables'][0].name;
-                const veggie1 = suggestions['Verduras'][0].name;
-                const veggie2 = suggestions['Verduras'][1].name;
+                const mealData = state.dietLog[state.selectedDate]?.[mealKey];
+                const selectedFoods = mealData ? [...mealData.proteins, ...mealData.fats, ...mealData.vegetables].map(f => f.name) : [];
 
-                const prompt = `Fotografía realista de un plato saludable ecuatoriano para el ${mealKey}. El plato contiene una porción de ${protein}, ${fat}, ${veggie1} y ${veggie2}. Vista superior, plato blanco, fondo de madera rústica, luz natural.`;
+                if (selectedFoods.length === 0) {
+                    container.innerHTML = `<p class="text-gray-500 text-center p-4">Añade alimentos a tu comida para generar una imagen del plato.</p>`;
+                    return;
+                }
+
+                container.innerHTML = '<div class="loader"></div>';
+                const prompt = `Fotografía realista de un plato saludable ecuatoriano para el ${mealKey}. El plato contiene porciones de ${selectedFoods.join(', ')}. Vista superior, plato blanco, fondo de madera rústica, luz natural.`;
 
                 try {
                     const apiKey = ""; 
@@ -388,7 +378,7 @@
                     
                     if (result.predictions && result.predictions[0].bytesBase64Encoded) {
                         const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
-                        container.innerHTML = `<img src="${imageUrl}" alt="Plato sugerido para ${mealKey}" class="w-full h-full object-cover rounded-lg"/>`;
+                        container.innerHTML = `<img src="${imageUrl}" alt="Plato personalizado para ${mealKey}" class="w-full h-full object-cover rounded-lg"/>`;
                     } else {
                         throw new Error("No se recibió una imagen válida.");
                     }
@@ -450,7 +440,14 @@
                     <div><p class="text-2xl font-bold text-emerald-600">${results.carbGrams} g</p><p class="text-sm text-gray-600">Carbs</p></div>
                     <div><p class="text-2xl font-bold text-emerald-600">${results.fatGrams} g</p><p class="text-sm text-gray-600">Grasas</p></div>
                 `;
-                document.getElementById('modal-results').classList.remove('hidden');
+
+                document.getElementById('modal-explanation-content').innerHTML = `
+                    <p><strong>1. Metabolismo Basal (TMB):</strong> Tu cuerpo, en reposo total, necesita aproximadamente <strong>${Math.round(bmr)} kcal</strong> solo para mantener sus funciones vitales.</p>
+                    <p><strong>2. Gasto Energético Total (GETD):</strong> Al incluir tu nivel de actividad, tu gasto diario real es de unas <strong>${Math.round(tdee)} kcal</strong>.</p>
+                    <p><strong>3. Objetivo con Déficit:</strong> Para perder peso de forma sostenible mientras proteges tu masa muscular, aplicamos un déficit moderado. Restamos unas 450 kcal a tu gasto total, resultando en tu objetivo de <strong>${calorieGoal} kcal</strong>. Esto promueve la quema de grasa sin afectar negativamente tu energía o músculo.</p>
+                `;
+                
+                document.getElementById('modal-results-container').classList.remove('hidden');
                 
                 document.getElementById('save-goals-btn').dataset.results = JSON.stringify(results);
                 document.getElementById('save-goals-btn').dataset.profile = JSON.stringify(profile);
