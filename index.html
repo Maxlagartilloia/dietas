@@ -346,6 +346,29 @@
                 lucide.createIcons();
             }
 
+            async function apiCallWithRetries(apiUrl, payload, maxRetries = 3) {
+                let attempt = 0;
+                let delay = 1000;
+                while (attempt < maxRetries) {
+                    try {
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+                        const result = await response.json();
+                        return result; // Success
+                    } catch (error) {
+                        console.error(`Attempt ${attempt + 1} failed:`, error);
+                        attempt++;
+                        if (attempt >= maxRetries) throw error; // Rethrow error after max retries
+                        await new Promise(res => setTimeout(res, delay));
+                        delay *= 2;
+                    }
+                }
+            }
+
             async function generatePlateImage(mealKey) {
                 const container = document.getElementById(`image-container-${mealKey}`);
                 if (!container) return;
@@ -358,9 +381,7 @@
                 try {
                     const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
                     const payload = { instances: [{ prompt: prompt }], parameters: { "sampleCount": 1 } };
-                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
-                    const result = await response.json();
+                    const result = await apiCallWithRetries(apiUrl, payload);
                     if (result.predictions && result.predictions[0].bytesBase64Encoded) {
                         container.innerHTML = `<img src="data:image/png;base64,${result.predictions[0].bytesBase64Encoded}" alt="Plato personalizado para ${mealKey}" class="w-full h-full object-cover rounded-lg"/>`;
                     } else { throw new Error("No se recibió una imagen válida."); }
@@ -389,9 +410,7 @@
                     const payload = { contents: chatHistory };
                     const apiKey = "";
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
-                    const result = await response.json();
+                    const result = await apiCallWithRetries(apiUrl, payload);
                     recipeContent.innerHTML = result.candidates[0].content.parts[0].text;
                 } catch (error) { console.error("Error generating recipes:", error); recipeContent.innerHTML = `<p class="text-red-500 text-center p-4">Error al generar las recetas. Por favor, inténtalo de nuevo.</p>`; }
             }
