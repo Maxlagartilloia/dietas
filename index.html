@@ -115,6 +115,19 @@
             </div>
         </div>
     </div>
+    
+    <div id="shopping-list-modal" class="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-3xl transform transition-all overflow-y-auto max-h-screen">
+            <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
+                <h2 class="text-2xl font-bold text-gray-800">Lista de Compras Semanal</h2>
+                <div class="flex items-center gap-4">
+                    <button id="export-shopping-list-pdf-btn" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold flex items-center"><i data-lucide="file-down" class="w-4 h-4 mr-2"></i>Exportar a PDF</button>
+                    <button id="close-shopping-list-modal-btn" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-7 h-7"></i></button>
+                </div>
+            </div>
+            <div id="shopping-list-content-container" class="prose max-w-none text-gray-700"></div>
+        </div>
+    </div>
 
     <!-- Contenido Principal -->
     <header class="bg-white shadow-sm sticky top-0 z-10 border-b border-gray-200">
@@ -132,7 +145,10 @@
                     </div>
                     <button id="next-day-btn" class="p-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
                 </div>
-                 <button id="progress-btn" class="p-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"><i data-lucide="bar-chart-3" class="w-5 h-5"></i></button>
+                 <div class="flex items-center gap-2">
+                    <button id="shopping-list-btn" class="p-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"><i data-lucide="shopping-cart" class="w-5 h-5"></i></button>
+                    <button id="progress-btn" class="p-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"><i data-lucide="bar-chart-3" class="w-5 h-5"></i></button>
+                 </div>
                 <div class="w-full md:w-auto lg:w-1/3 bg-gray-100 p-3 rounded-xl">
                     <div class="flex justify-between items-center mb-1 text-sm font-semibold">
                         <span class="text-emerald-600">Consumido</span>
@@ -553,6 +569,75 @@
                     doc.save(`recetario-${state.selectedDate}.pdf`);
                 });
             }
+            
+            function generateShoppingList() {
+                const shoppingListModal = document.getElementById('shopping-list-modal');
+                const contentContainer = document.getElementById('shopping-list-content-container');
+                shoppingListModal.classList.remove('hidden');
+                contentContainer.innerHTML = '<div class="flex justify-center"><div class="loader"></div></div>';
+
+                const ingredientToCategory = {};
+                for (const meal in ingredientPools) {
+                    for (const category in ingredientPools[meal]) {
+                        ingredientPools[meal][category].forEach(item => {
+                            if (!ingredientToCategory[item.name]) {
+                                ingredientToCategory[item.name] = category;
+                            }
+                        });
+                    }
+                }
+
+                const weeklyIngredients = new Set();
+                const today = new Date(`${state.selectedDate}T12:00:00Z`);
+                const dayOfWeek = today.getDay();
+                const daysUntilMonday = (dayOfWeek === 1) ? 0 : (8 - dayOfWeek) % 7;
+                const nextMonday = new Date(today);
+                nextMonday.setDate(today.getDate() + daysUntilMonday);
+
+                for (let i = 0; i < 7; i++) {
+                    const day = new Date(nextMonday);
+                    day.setDate(nextMonday.getDate() + i);
+                    const dayOfYear = getDayOfYear(day);
+                    const dailySuggestions = getDailySuggestions(dayOfYear);
+                    ['desayuno', 'almuerzo', 'cena'].forEach(mealKey => {
+                        Object.values(dailySuggestions[mealKey]).flat().forEach(item => weeklyIngredients.add(item.name));
+                    });
+                }
+                
+                const categorizedList = {
+                    'Proteínas': [],
+                    'Grasas Saludables': [],
+                    'Verduras': []
+                };
+
+                weeklyIngredients.forEach(name => {
+                    const category = ingredientToCategory[name] || 'Verduras'; // Default to Verduras
+                    categorizedList[category].push(name);
+                });
+
+                let html = '';
+                for (const category in categorizedList) {
+                    html += `<h3>${category}</h3><ul>`;
+                    categorizedList[category].sort().forEach(item => {
+                        html += `<li>${item}</li>`;
+                    });
+                    html += `</ul>`;
+                }
+                contentContainer.innerHTML = html;
+            }
+            
+            function exportShoppingListToPDF() {
+                const shoppingListContent = document.getElementById('shopping-list-content-container');
+                const doc = new jsPDF();
+                html2canvas(shoppingListContent, { scale: 2 }).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    const imgProps = doc.getImageProperties(imgData);
+                    const pdfWidth = doc.internal.pageSize.getWidth() - 20;
+                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                    doc.addImage(imgData, 'PNG', 10, 10, pdfWidth, pdfHeight);
+                    doc.save(`lista-de-compras-semanal.pdf`);
+                });
+            }
 
             function addEventListenersToRenderedItems() {
                 document.querySelectorAll('.add-food-btn').forEach(btn => btn.addEventListener('click', (e) => { const input = e.currentTarget.previousElementSibling; addFood(input.dataset.category, input.dataset.meal, input.value); }));
@@ -576,6 +661,9 @@
                 document.getElementById('progress-btn').addEventListener('click', showProgress);
                 document.getElementById('close-progress-modal-btn').addEventListener('click', () => document.getElementById('progress-modal').classList.add('hidden'));
                 document.getElementById('welcome-define-goals-btn').addEventListener('click', () => document.getElementById('goal-modal').classList.remove('hidden'));
+                document.getElementById('shopping-list-btn').addEventListener('click', generateShoppingList);
+                document.getElementById('close-shopping-list-modal-btn').addEventListener('click', () => document.getElementById('shopping-list-modal').classList.add('hidden'));
+                document.getElementById('export-shopping-list-pdf-btn').addEventListener('click', exportShoppingListToPDF);
             }
 
             loadState();
