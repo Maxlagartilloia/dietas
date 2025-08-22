@@ -9,6 +9,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Librería para generar PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -33,70 +37,81 @@
         .details-content.open {
             max-height: 1000px;
         }
+        /* Estilos para el contenido de la receta generada */
+        .prose h3 {
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: #059669;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.25rem;
+            border-bottom-width: 2px;
+            border-color: #a7f3d0;
+        }
+        .prose h4 {
+            font-weight: 600;
+            font-size: 1.125rem;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        .prose p {
+            margin-top: 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+        .prose ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+        }
+        .prose li {
+            margin-bottom: 0.25rem;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
 
-    <!-- Modal de Metas -->
+    <!-- Modals -->
     <div id="goal-modal" class="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4 hidden">
         <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-2xl transform transition-all overflow-y-auto max-h-screen">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-gray-800">Define Tus Metas</h2>
-                <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-7 h-7"></i></button>
+                <button id="close-goal-modal-btn" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-7 h-7"></i></button>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-600 mb-1">Género</label>
-                    <select id="gender-input" name="gender" class="w-full p-2.5 border border-gray-300 rounded-lg">
-                        <option value="">Seleccionar...</option>
-                        <option value="male">Masculino</option>
-                        <option value="female">Femenino</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-600 mb-1">Edad</label>
-                    <input type="number" id="age-input" name="age" placeholder="ej. 30" class="w-full p-2.5 border border-gray-300 rounded-lg" />
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-600 mb-1">Peso (kg)</label>
-                    <input type="number" id="weight-input" name="weight" placeholder="ej. 70" class="w-full p-2.5 border border-gray-300 rounded-lg" />
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-600 mb-1">Estatura (cm)</label>
-                    <input type="number" id="height-input" name="height" placeholder="ej. 175" class="w-full p-2.5 border border-gray-300 rounded-lg" />
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold text-gray-600 mb-1">Nivel de Actividad</label>
-                    <select id="activity-level-input" name="activityLevel" class="w-full p-2.5 border border-gray-300 rounded-lg">
-                        <option value="">Seleccionar...</option>
-                        <option value="1.2">Sedentario</option>
-                        <option value="1.375">Ligero (1-3 días/sem)</option>
-                        <option value="1.55">Moderado (3-5 días/sem)</option>
-                        <option value="1.725">Fuerte (6-7 días/sem)</option>
-                        <option value="1.9">Muy Fuerte (2x día)</option>
-                    </select>
-                </div>
+                <div><label class="block text-sm font-semibold text-gray-600 mb-1">Género</label><select id="gender-input" name="gender" class="w-full p-2.5 border border-gray-300 rounded-lg"><option value="">Seleccionar...</option><option value="male">Masculino</option><option value="female">Femenino</option></select></div>
+                <div><label class="block text-sm font-semibold text-gray-600 mb-1">Edad</label><input type="number" id="age-input" name="age" placeholder="ej. 30" class="w-full p-2.5 border border-gray-300 rounded-lg" /></div>
+                <div><label class="block text-sm font-semibold text-gray-600 mb-1">Peso (kg)</label><input type="number" id="weight-input" name="weight" placeholder="ej. 70" class="w-full p-2.5 border border-gray-300 rounded-lg" /></div>
+                <div><label class="block text-sm font-semibold text-gray-600 mb-1">Estatura (cm)</label><input type="number" id="height-input" name="height" placeholder="ej. 175" class="w-full p-2.5 border border-gray-300 rounded-lg" /></div>
+                <div class="md:col-span-2"><label class="block text-sm font-semibold text-gray-600 mb-1">Nivel de Actividad</label><select id="activity-level-input" name="activityLevel" class="w-full p-2.5 border border-gray-300 rounded-lg"><option value="">Seleccionar...</option><option value="1.2">Sedentario</option><option value="1.375">Ligero (1-3 días/sem)</option><option value="1.55">Moderado (3-5 días/sem)</option><option value="1.725">Fuerte (6-7 días/sem)</option><option value="1.9">Muy Fuerte (2x día)</option></select></div>
             </div>
-            <div class="flex justify-center mb-6">
-                <button id="calculate-goals-btn" class="bg-emerald-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-emerald-600 transition-colors text-lg">
-                    Calcular Mis Metas
-                </button>
-            </div>
+            <div class="flex justify-center mb-6"><button id="calculate-goals-btn" class="bg-emerald-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-emerald-600 transition-colors text-lg">Calcular Mis Metas</button></div>
             <div id="modal-results-container" class="hidden">
-                 <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-200">
-                    <h3 class="text-xl font-bold text-emerald-800 mb-4 text-center">Tus Objetivos Diarios</h3>
-                    <div id="modal-results-content" class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center"></div>
+                 <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-200"><h3 class="text-xl font-bold text-emerald-800 mb-4 text-center">Tus Objetivos Diarios</h3><div id="modal-results-content" class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center"></div></div>
+                <div class="mt-6 bg-gray-50 p-6 rounded-xl border border-gray-200"><h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Entiende tu Objetivo</h3><div id="modal-explanation-content" class="text-sm text-gray-700 space-y-3"></div></div>
+                 <div class="mt-6 flex justify-center"><button id="save-goals-btn" class="bg-blue-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-600 transition-colors">Guardar y Usar Metas</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="recipe-modal" class="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-3xl transform transition-all overflow-y-auto max-h-screen">
+            <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
+                <h2 class="text-2xl font-bold text-gray-800">Tu Recetario del Día</h2>
+                <div class="flex items-center gap-4">
+                    <button id="export-pdf-btn" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold flex items-center"><i data-lucide="file-down" class="w-4 h-4 mr-2"></i>Exportar a PDF</button>
+                    <button id="close-recipe-modal-btn" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-7 h-7"></i></button>
                 </div>
-                <!-- Nueva sección de explicación -->
-                <div class="mt-6 bg-gray-50 p-6 rounded-xl border border-gray-200">
-                    <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Entiende tu Objetivo</h3>
-                    <div id="modal-explanation-content" class="text-sm text-gray-700 space-y-3"></div>
-                </div>
-                 <div class="mt-6 flex justify-center">
-                     <button id="save-goals-btn" class="bg-blue-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-600 transition-colors">
-                        Guardar y Usar Metas
-                    </button>
-                </div>
+            </div>
+            <div id="recipe-content-container" class="prose max-w-none text-gray-700"></div>
+        </div>
+    </div>
+
+    <div id="progress-modal" class="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-3xl transform transition-all">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Tu Progreso Semanal</h2>
+                <button id="close-progress-modal-btn" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-7 h-7"></i></button>
+            </div>
+            <div>
+                <canvas id="progress-chart"></canvas>
             </div>
         </div>
     </div>
@@ -117,6 +132,7 @@
                     </div>
                     <button id="next-day-btn" class="p-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
                 </div>
+                 <button id="progress-btn" class="p-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"><i data-lucide="bar-chart-3" class="w-5 h-5"></i></button>
                 <div class="w-full md:w-auto lg:w-1/3 bg-gray-100 p-3 rounded-xl">
                     <div class="flex justify-between items-center mb-1 text-sm font-semibold">
                         <span class="text-emerald-600">Consumido</span>
@@ -135,7 +151,14 @@
     </header>
 
     <main id="main-content" class="container mx-auto p-4 md:p-8">
-        <div class="mb-10 bg-white p-6 rounded-xl shadow-md border border-gray-100">
+        <div id="welcome-banner" class="mb-10 bg-emerald-500 text-white p-8 rounded-xl shadow-lg text-center hidden">
+            <h2 class="text-3xl font-bold mb-2">¡Bienvenido a DietaryTrack!</h2>
+            <p class="mb-6">Para empezar a transformar tu alimentación, primero necesitamos conocer tus metas.</p>
+            <button id="welcome-define-goals-btn" class="bg-white text-emerald-600 font-bold py-3 px-6 rounded-lg hover:bg-emerald-50 transition-colors text-lg flex items-center mx-auto">
+                <i data-lucide="target" class="w-6 h-6 mr-3"></i>Definir Mis Metas Ahora
+            </button>
+        </div>
+        <div id="principles-container" class="mb-10 bg-white p-6 rounded-xl shadow-md border border-gray-100">
             <button id="toggle-principles-btn" class="w-full flex justify-between items-center text-left">
                 <h2 class="text-2xl font-bold text-gray-800">Principios Clave para tu Éxito</h2>
                 <i data-lucide="chevron-down" id="principles-arrow" class="w-6 h-6 transition-transform"></i>
@@ -151,6 +174,8 @@
                 </ul>
             </div>
         </div>
+        <div id="meals-container"></div>
+        <div id="recipe-button-container" class="mt-10 flex justify-center"></div>
     </main>
 
     <footer class="text-center py-8 px-4">
@@ -161,73 +186,62 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const { jsPDF } = window.jspdf;
             let state = {
                 dietLog: {},
-                userProfile: { weight: '', height: '', age: '', gender: '', activityLevel: '' },
+                userProfile: { profileComplete: false, weight: '', height: '', age: '', gender: '', activityLevel: '' },
                 calorieGoal: 2000,
                 selectedDate: formatDate(new Date()),
             };
-
+            let progressChart = null;
+            
             const calorieDatabase = {
-                'aguacate': 160, 'nueces de macadamia': 718, 'sacha inchi': 600, 'aceite de coco': 862, 'maní': 567, 'nueces': 654, 'aceite de oliva': 884, 'semillas de chía': 486, 'almendras': 579,
-                'chochos': 120, 'quinua': 120, 'pescado (corvina)': 95, 'camarones': 85, 'pollo': 239, 'huevo': 155, 'lenteja serrana': 115, 'tofu': 76, 'carne magra': 250, 'lentejas': 116, 'queso fresco': 299, 'trucha': 148, 'garbanzo': 139, 'leche': 42, 'yogur natural': 61, 'fréjol': 130,
-                'tomate de árbol': 50, 'brócoli': 34, 'espinaca': 23, 'pimiento': 20, 'yuca': 160, 'melloco': 55, 'plátano verde': 122, 'frutillas': 32, 'babaco': 23, 'avena': 389, 'zanahoria': 41, 'tomate': 18, 'calabacín': 17, 'mote': 100, 'naranjilla': 25, 'granadilla': 97, 'pepino': 15, 'cebolla': 40, 'lechuga': 15, 'papaya': 43, 'piña': 50, 'melón': 34, 'morocho partido': 110, 'acelga': 19, 'maracuyá': 97, 'batata (camote)': 86
+                'aguacate': 160, 'nueces': 654, 'maní': 567, 'semillas de sambo': 559, 'nata de leche': 350,
+                'huevo criollo': 155, 'quesito de hoja': 280, 'leche de finca': 60, 'yogur de pajarito': 70,
+                'bolón de verde asado': 250, 'majado de verde': 180, 'avena': 389, 'frutas de temporada': 70, 'jugo de naranjilla': 40,
+                'aceite de achiote': 900, 'aceite de oliva': 884,
+                'pechuga de pollo': 239, 'menestra de lenteja': 116, 'trucha al ajillo': 190, 'menestra de fréjol': 130, 'corvina': 95, 'carne en bistec': 250,
+                'arroz integral': 111, 'patacones al horno': 150, 'ensalada criolla': 50, 'morocho partido': 110, 'yuca al vapor': 160, 'maduro asado': 150, 'mote pillo': 120,
+                'caldo de gallina': 250, 'humita de sal': 180, 'chochos con tostado': 150, 'pescado encocado': 300,
+                'ensalada de vegetales': 40, 'calabacín salteado': 30, 'brócoli al vapor': 34, 'sopa de quinua': 150, 'mellocos salteados': 70
             };
-
+            
             const motivationalQuotes = [
                 "La disciplina es el puente entre las metas y los logros.", "Tu cuerpo puede soportar casi cualquier cosa. Es a tu mente a la que tienes que convencer.",
                 "El secreto para salir adelante es empezar.", "No se trata de ser perfecto. Se trata de ser constante.",
                 "Cada comida es una oportunidad para nutrir tu cuerpo.", "El éxito es la suma de pequeños esfuerzos repetidos día tras día."
             ];
 
-            // Bancos de ingredientes separados y más grandes para máxima variedad
             const ingredientPools = {
                 desayuno: {
-                    'Grasas Saludables': [{ name: 'Aguacate', portion: '1/4 mediano' }, { name: 'Maní', portion: '2 cdas' }, { name: 'Nueces', portion: '5 unidades' }, { name: 'Semillas de Chía', portion: '1 cda' }, { name: 'Almendras', portion: '10 unidades' }, { name: 'Sacha Inchi', portion: '1 cda' }],
-                    'Proteínas': [{ name: 'Huevo', portion: '2 unidades' }, { name: 'Yogur Natural', portion: '1 taza' }, { name: 'Queso Fresco', portion: '2 rebanadas' }, { name: 'Leche', portion: '1 vaso' }],
-                    'Verduras': [{ name: 'Frutillas', portion: '1 taza' }, { name: 'Babaco', portion: '1 rodaja' }, { name: 'Avena', portion: '1/2 taza' }, { name: 'Granadilla', portion: '2 unidades' }, { name: 'Naranjilla', portion: '2 unidades' }, { name: 'Papaya', portion: '1 taza' }, { name: 'Tomate de Árbol', portion: '1 unidad' }, { name: 'Maracuyá', portion: '2 unidades' }]
+                    'Grasas Saludables': [{ name: 'Aguacate', portion: '1/4 mediano' }, { name: 'Maní quebrado', portion: '2 cdas' }, { name: 'Nata de leche fresca', portion: '1 cda' }, { name: 'Semillas de Sambo', portion: '1 cda' }, { name: 'Nueces', portion: '5 unidades' }],
+                    'Proteínas': [{ name: 'Huevo criollo', portion: '2 unidades' }, { name: 'Quesito de hoja', portion: '2 rebanadas' }, { name: 'Leche de finca', portion: '1 vaso' }, { name: 'Yogur de pajarito', portion: '1 taza' }],
+                    'Verduras': [{ name: 'Bolón de verde asado', portion: '1/2 unidad' }, { name: 'Majado de verde', portion: '1/2 taza' }, { name: 'Avena en hojuelas', portion: '1/2 taza' }, { name: 'Frutas de temporada', portion: '1 taza' }, { name: 'Jugo de naranjilla', portion: '1 vaso' }]
                 },
                 almuerzo: {
-                    'Grasas Saludables': [{ name: 'Aceite de Oliva', portion: '1 cda' }, { name: 'Nueces de Macadamia', portion: '5 unidades' }, { name: 'Maní Tostado', portion: '2 cdas' }],
-                    'Proteínas': [{ name: 'Pollo', portion: '1 filete (120g)' }, { name: 'Lenteja Serrana', portion: '1 taza cocida' }, { name: 'Trucha', portion: '1 filete (150g)' }, { name: 'Fréjol', portion: '1 taza cocida' }, { name: 'Pescado (Corvina)', portion: '1 filete (150g)' }, { name: 'Carne Magra', portion: '1 filete (120g)' }, { name: 'Garbanzo', portion: '1 taza cocida' }],
-                    'Verduras': [{ name: 'Brócoli', portion: '1 taza' }, { name: 'Zanahoria', portion: '1/2 taza' }, { name: 'Acelga', portion: '2 tazas' }, { name: 'Morocho partido', portion: '1/2 taza' }, { name: 'Lechuga', portion: '2 tazas' }, { name: 'Yuca', portion: '1/2 taza' }, { name: 'Batata (Camote)', portion: '1/2 taza' }, { name: 'Mote', portion: '1/2 taza' }, { name: 'Quinua', portion: '1 taza cocida' }]
+                    'Grasas Saludables': [{ name: 'Aguacate para menestra', portion: '1/4 mediano' }, { name: 'Aceite de achiote', portion: '1 cdta' }, { name: 'Maní en salsa', portion: '2 cdas' }, { name: 'Aceite de Oliva', portion: '1 cda' }],
+                    'Proteínas': [{ name: 'Pechuga de pollo', portion: '1 filete (120g)' }, { name: 'Menestra de lenteja', portion: '1 taza' }, { name: 'Trucha al ajillo', portion: '1 filete (150g)' }, { name: 'Menestra de fréjol', portion: '1 taza' }, { name: 'Corvina (al horno)', portion: '1 filete (150g)' }, { name: 'Carne en bistec', portion: '1 filete (120g)' }],
+                    'Verduras': [{ name: 'Arroz integral', portion: '1/2 taza' }, { name: 'Patacones (al horno)', portion: '4 unidades' }, { name: 'Ensalada criolla', portion: '2 tazas' }, { name: 'Morocho partido', portion: '1/2 taza' }, { name: 'Yuca al vapor', portion: '1/2 taza' }, { name: 'Maduro asado', portion: '1/2 unidad' }, { name: 'Mote pillo', portion: '1/2 taza' }]
                 },
                 cena: {
-                    'Grasas Saludables': [{ name: 'Aceite de Coco', portion: '1 cdta' }, { name: 'Aguacate', portion: '1/8 mediano' }, { name: 'Almendras', portion: '5 unidades' }],
-                    'Proteínas': [{ name: 'Camarones', portion: '150g' }, { name: 'Tofu', portion: '120g' }, { name: 'Chochos', portion: '1 taza' }, { name: 'Pechuga de Pavo', portion: '100g' }],
-                    'Verduras': [{ name: 'Espinaca', portion: '2 tazas' }, { name: 'Calabacín', portion: '1 taza' }, { name: 'Pimiento', portion: '1/2 unidad' }, { name: 'Melloco', portion: '1/2 taza' }, { name: 'Pepino', portion: '1 taza' }, { name: 'Tomate', portion: '1 unidad' }]
+                    'Grasas Saludables': [{ name: 'Aceite de oliva', portion: '1 cda' }, { name: 'Aguacate', portion: '1/8 mediano' }, { name: 'Nueces', portion: '4 unidades' }],
+                    'Proteínas': [{ name: 'Caldo de gallina criolla', portion: '1 plato' }, { name: 'Humita de sal', portion: '1 unidad' }, { name: 'Chochos con tostado', portion: '1 taza' }, { name: 'Pescado encocado (light)', portion: '1 filete (120g)' }],
+                    'Verduras': [{ name: 'Ensalada de vegetales frescos', portion: '2 tazas' }, { name: 'Calabacín salteado', portion: '1 taza' }, { name: 'Brócoli al vapor', portion: '1 taza' }, { name: 'Sopa de quinua', portion: '1 plato' }, { name: 'Mellocos salteados', portion: '1/2 taza' }]
                 }
             };
-
-            function formatDate(date) {
-                return new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-            }
-
-            function getCalories(food) {
-                const foodKey = food.toLowerCase().trim();
-                const dbKey = Object.keys(calorieDatabase).find(k => foodKey.includes(k));
-                return calorieDatabase[dbKey] || 100;
-            }
-
-            function getDayOfYear(date) {
-                const start = new Date(date.getFullYear(), 0, 0);
-                const diff = date - start;
-                const oneDay = 1000 * 60 * 60 * 24;
-                return Math.floor(diff / oneDay);
-            }
             
-            function saveState() {
-                localStorage.setItem('dietAppState', JSON.stringify(state));
-            }
-
+            function formatDate(date) { return new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().split('T')[0]; }
+            function getCalories(food) { const key = food.toLowerCase().trim(); const dbKey = Object.keys(calorieDatabase).find(k => key.includes(k)); return calorieDatabase[dbKey] || 100; }
+            function getDayOfYear(date) { const start = new Date(date.getFullYear(), 0, 0); return Math.floor((date - start) / (1000 * 60 * 60 * 24)); }
+            
+            function saveState() { localStorage.setItem('dietAppState_v1', JSON.stringify(state)); }
             function loadState() {
-                const savedState = localStorage.getItem('dietAppState');
+                const savedState = localStorage.getItem('dietAppState_v1');
                 if (savedState) {
                     state = JSON.parse(savedState);
-                    if (!localStorage.getItem('hasLoadedBeforeV6')) {
-                        state.selectedDate = formatDate(new Date());
-                        localStorage.setItem('hasLoadedBeforeV6', 'true');
-                    }
+                }
+                 if (!state.userProfile || !state.userProfile.profileComplete) {
+                    document.getElementById('welcome-banner').classList.remove('hidden');
                 }
             }
             
@@ -250,15 +264,11 @@
 
             function render() {
                 document.getElementById('date-picker').value = state.selectedDate;
-                const dayOfYear = getDayOfYear(new Date(`${state.selectedDate}T12:00:00`));
+                const dayOfYear = getDayOfYear(new Date(`${state.selectedDate}T12:00:00Z`));
                 const dailySuggestions = getDailySuggestions(dayOfYear);
 
-                const mainContent = document.getElementById('main-content');
-                const principlesSection = mainContent.querySelector('.mb-10.bg-white');
-                mainContent.innerHTML = '';
-                if (principlesSection) mainContent.appendChild(principlesSection);
-                
-                mainContent.innerHTML += `
+                const mealsContainer = document.getElementById('meals-container');
+                mealsContainer.innerHTML = `
                     ${renderMealSection('Desayuno', dailySuggestions.desayuno)}
                     ${renderMealSection('Almuerzo', dailySuggestions.almuerzo)}
                     ${renderMealSection('Cena', dailySuggestions.cena)}
@@ -266,6 +276,7 @@
                 `;
                 
                 renderTotals();
+                updateGenerateRecipesButtonState();
                 document.getElementById('quote-text').textContent = `"${motivationalQuotes[dayOfYear % motivationalQuotes.length]}"`;
                 addEventListenersToRenderedItems();
                 lucide.createIcons();
@@ -281,13 +292,8 @@
                         <div class="flex flex-wrap justify-between items-end mb-5 pb-3 border-b-2 border-gray-200 gap-4">
                             <h2 class="text-2xl md:text-3xl font-bold text-gray-800">${mealName}</h2>
                             <div class="flex items-center gap-4">
-                                <button class="generate-image-btn bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm font-semibold flex items-center" data-meal-key="${mealKey}">
-                                    <i data-lucide="image" class="w-4 h-4 mr-2"></i>Ver Mi Plato
-                                </button>
-                                <div class="flex items-center text-emerald-600 font-bold">
-                                    <i data-lucide="flame" class="w-6 h-6 mr-2"></i>
-                                    <span class="text-xl md:text-2xl">${totalCalories} kcal</span>
-                                </div>
+                                <button class="generate-image-btn bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm font-semibold flex items-center" data-meal-key="${mealKey}"><i data-lucide="image" class="w-4 h-4 mr-2"></i>Ver Mi Plato</button>
+                                <div class="flex items-center text-emerald-600 font-bold"><i data-lucide="flame" class="w-6 h-6 mr-2"></i><span class="text-xl md:text-2xl">${totalCalories} kcal</span></div>
                             </div>
                         </div>
                         <div id="image-container-${mealKey}" class="my-4 flex justify-center items-center bg-gray-100 rounded-lg min-h-[256px] hidden"></div>
@@ -305,29 +311,15 @@
                  return `
                     <div class="bg-white p-5 rounded-xl shadow-md h-full flex flex-col border border-gray-100">
                         <h3 class="text-lg font-bold text-gray-800 mb-4">${title}</h3>
-                        <div class="mb-4">
-                            <div class="flex flex-wrap">
-                                ${categorySuggestions.map(s => `
-                                    <button class="suggestion-pill flex flex-col items-start bg-emerald-100 text-emerald-800 text-xs font-semibold p-2 rounded-lg hover:bg-emerald-200 hover:scale-105 transform transition-all duration-200 mr-2 mb-2" data-food-name="${s.name}" data-category="${categoryKey}" data-meal="${mealKey}">
-                                        <span class="flex items-center"><i data-lucide="plus" class="w-3.5 h-3.5 mr-1.5"></i>${s.name}</span>
-                                        <span class="text-emerald-700 text-[10px] font-medium mt-1 ml-5">${s.portion}</span>
-                                    </button>`).join('')}
-                            </div>
-                        </div>
+                        <div class="mb-4"><div class="flex flex-wrap">
+                            ${categorySuggestions.map(s => `<button class="suggestion-pill flex flex-col items-start bg-emerald-100 text-emerald-800 text-xs font-semibold p-2 rounded-lg hover:bg-emerald-200 hover:scale-105 transform transition-all duration-200 mr-2 mb-2" data-food-name="${s.name}" data-category="${categoryKey}" data-meal="${mealKey}"><span class="flex items-center"><i data-lucide="plus" class="w-3.5 h-3.5 mr-1.5"></i>${s.name}</span><span class="text-emerald-700 text-[10px] font-medium mt-1 ml-5">${s.portion}</span></button>`).join('')}
+                        </div></div>
                         <div class="flex mb-4">
                             <input type="text" placeholder="Añadir alimento..." class="food-input flex-grow p-2.5 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-shadow" data-category="${categoryKey}" data-meal="${mealKey}" />
                             <button class="add-food-btn bg-emerald-500 text-white p-2.5 rounded-r-lg hover:bg-emerald-600 transition-colors duration-200" data-category="${categoryKey}" data-meal="${mealKey}"><i data-lucide="plus" class="w-5 h-5"></i></button>
                         </div>
                         <ul class="space-y-2.5 overflow-y-auto flex-grow pr-2 -mr-2">
-                            ${foods.map((food, index) => `
-                                <li class="flex justify-between items-center bg-gray-50 p-2.5 rounded-lg group transition-all duration-200 hover:bg-gray-100">
-                                    <span class="text-gray-700 font-medium">${food.name}</span>
-                                    <div class="flex items-center">
-                                        <span class="text-sm text-gray-500 font-semibold mr-4">${food.calories} kcal</span>
-                                        <button class="remove-food-btn text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" data-category="${categoryKey}" data-meal="${mealKey}" data-index="${index}"><i data-lucide="trash-2" class="w-4.5 h-4.5"></i></button>
-                                    </div>
-                                </li>
-                            `).join('')}
+                            ${foods.map((food, index) => `<li class="flex justify-between items-center bg-gray-50 p-2.5 rounded-lg group transition-all duration-200 hover:bg-gray-100"><span class="text-gray-700 font-medium">${food.name}</span><div class="flex items-center"><span class="text-sm text-gray-500 font-semibold mr-4">${food.calories} kcal</span><button class="remove-food-btn text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" data-category="${categoryKey}" data-meal="${mealKey}" data-index="${index}"><i data-lucide="trash-2" class="w-4.5 h-4.5"></i></button></div></li>`).join('')}
                             ${foods.length === 0 ? '<p class="text-gray-400 text-sm text-center italic mt-4">No hay alimentos.</p>' : ''}
                         </ul>
                     </div>
@@ -343,55 +335,70 @@
                 document.getElementById('calorie-goal-text').textContent = `Objetivo: ${state.calorieGoal} kcal`;
                 document.getElementById('progress-bar').style.width = `${progress}%`;
             }
+            
+            function updateGenerateRecipesButtonState() {
+                const container = document.getElementById('recipe-button-container');
+                const dayData = state.dietLog[state.selectedDate];
+                const isReady = dayData && dayData.desayuno?.proteins.length > 0 && dayData.almuerzo?.proteins.length > 0 && dayData.cena?.proteins.length > 0;
+                
+                container.innerHTML = `<button id="generate-recipes-btn" class="bg-green-600 text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:bg-green-700 transition-all text-lg flex items-center disabled:bg-gray-400 disabled:cursor-not-allowed" ${!isReady ? 'disabled' : ''}><i data-lucide="chef-hat" class="w-6 h-6 mr-3"></i>Generar Recetas del Día</button>`;
+                document.getElementById('generate-recipes-btn').addEventListener('click', generateDailyRecipes);
+                lucide.createIcons();
+            }
 
             async function generatePlateImage(mealKey) {
                 const container = document.getElementById(`image-container-${mealKey}`);
                 if (!container) return;
-
                 container.classList.remove('hidden');
-                
                 const mealData = state.dietLog[state.selectedDate]?.[mealKey];
                 const selectedFoods = mealData ? [...mealData.proteins, ...mealData.fats, ...mealData.vegetables].map(f => f.name) : [];
-
-                if (selectedFoods.length === 0) {
-                    container.innerHTML = `<p class="text-gray-500 text-center p-4">Añade alimentos a tu comida para generar una imagen del plato.</p>`;
-                    return;
-                }
-
+                if (selectedFoods.length === 0) { container.innerHTML = `<p class="text-gray-500 text-center p-4">Añade alimentos a tu comida para generar una imagen del plato.</p>`; return; }
                 container.innerHTML = '<div class="loader"></div>';
                 const prompt = `Fotografía realista de un plato saludable ecuatoriano para el ${mealKey}. El plato contiene porciones de ${selectedFoods.join(', ')}. Vista superior, plato blanco, fondo de madera rústica, luz natural.`;
-
                 try {
-                    const apiKey = ""; 
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+                    const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
                     const payload = { instances: [{ prompt: prompt }], parameters: { "sampleCount": 1 } };
-
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (!response.ok) throw new Error(`Error en la API: ${response.statusText}`);
-                    
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
                     const result = await response.json();
-                    
                     if (result.predictions && result.predictions[0].bytesBase64Encoded) {
-                        const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
-                        container.innerHTML = `<img src="${imageUrl}" alt="Plato personalizado para ${mealKey}" class="w-full h-full object-cover rounded-lg"/>`;
-                    } else {
-                        throw new Error("No se recibió una imagen válida.");
-                    }
-                } catch (error) {
-                    console.error("Error al generar la imagen:", error);
-                    container.innerHTML = `<p class="text-red-500 text-center p-4">Error al generar la imagen. Inténtalo de nuevo.</p>`;
-                }
+                        container.innerHTML = `<img src="data:image/png;base64,${result.predictions[0].bytesBase64Encoded}" alt="Plato personalizado para ${mealKey}" class="w-full h-full object-cover rounded-lg"/>`;
+                    } else { throw new Error("No se recibió una imagen válida."); }
+                } catch (error) { console.error("Error al generar la imagen:", error); container.innerHTML = `<p class="text-red-500 text-center p-4">Error al generar la imagen. Inténtalo de nuevo.</p>`; }
+            }
+
+            async function generateDailyRecipes() {
+                const recipeModal = document.getElementById('recipe-modal');
+                const recipeContent = document.getElementById('recipe-content-container');
+                recipeModal.classList.remove('hidden');
+                recipeContent.innerHTML = '<div class="flex justify-center"><div class="loader"></div></div>';
+                const dayData = state.dietLog[state.selectedDate];
+                const breakfastItems = [...dayData.desayuno.proteins, ...dayData.desayuno.fats, ...dayData.desayuno.vegetables].map(f => f.name).join(', ');
+                const lunchItems = [...dayData.almuerzo.proteins, ...dayData.almuerzo.fats, ...dayData.almuerzo.vegetables].map(f => f.name).join(', ');
+                const dinnerItems = [...dayData.cena.proteins, ...dayData.cena.fats, ...dayData.cena.vegetables].map(f => f.name).join(', ');
+                const prompt = `Eres un chef ecuatoriano experto en cocina saludable. Crea recetas sencillas y paso a paso para un día completo usando únicamente los siguientes ingredientes. Proporciona un nombre creativo para cada plato. Formatea la respuesta en HTML bien estructurado:
+                - Usa '<h3 class="font-extrabold text-xl text-emerald-600 mb-2 pb-1 border-b-2 border-emerald-200">' para los títulos de las comidas (Desayuno, Almuerzo, Cena).
+                - Usa '<h4 class="font-semibold text-lg text-gray-800 mb-2">' para el nombre del plato.
+                - Usa '<p class="font-semibold text-gray-700 mt-3 mb-1">Instrucciones:</p>'.
+                - Usa una lista no ordenada '<ul>' con '<li>' para los pasos de la preparación.
+                Desayuno: ${breakfastItems}.
+                Almuerzo: ${lunchItems}.
+                Cena: ${dinnerItems}.`;
+                try {
+                    let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+                    const payload = { contents: chatHistory };
+                    const apiKey = "";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+                    const result = await response.json();
+                    recipeContent.innerHTML = result.candidates[0].content.parts[0].text;
+                } catch (error) { console.error("Error generating recipes:", error); recipeContent.innerHTML = `<p class="text-red-500 text-center p-4">Error al generar las recetas. Por favor, inténtalo de nuevo.</p>`; }
             }
 
             function addFood(category, meal, foodName) {
                 if (!foodName.trim()) return;
                 const foodItem = { name: foodName.trim(), calories: getCalories(foodName) };
-                
                 if (!state.dietLog[state.selectedDate]) {
                     state.dietLog[state.selectedDate] = { desayuno: {fats:[],proteins:[],vegetables:[]}, almuerzo: {fats:[],proteins:[],vegetables:[]}, cena: {fats:[],proteins:[],vegetables:[]}, snacks: {fats:[],proteins:[],vegetables:[]} };
                 }
@@ -407,7 +414,7 @@
             }
 
             function changeDay(amount) {
-                const currentDate = new Date(`${state.selectedDate}T12:00:00`);
+                const currentDate = new Date(`${state.selectedDate}T12:00:00Z`);
                 currentDate.setDate(currentDate.getDate() + amount);
                 state.selectedDate = formatDate(currentDate);
                 render();
@@ -457,57 +464,99 @@
                 const results = JSON.parse(e.currentTarget.dataset.results);
                 const profile = JSON.parse(e.currentTarget.dataset.profile);
                 
-                state.userProfile = profile;
+                state.userProfile = { ...profile, profileComplete: true };
                 state.calorieGoal = results.calorieGoal;
                 
                 saveState();
                 
                 document.getElementById('goal-modal').classList.add('hidden');
+                document.getElementById('welcome-banner').classList.add('hidden');
                 render();
             }
+            
+            function showProgress() {
+                const progressModal = document.getElementById('progress-modal');
+                progressModal.classList.remove('hidden');
+                
+                const labels = [];
+                const data = [];
+                for (let i = 6; i >= 0; i--) {
+                    const date = new Date();
+                    date.setDate(date.getDate() - i);
+                    const dateString = formatDate(date);
+                    labels.push(dateString.substring(5)); // 'MM-DD'
+                    
+                    const logData = state.dietLog[dateString] || {};
+                    const dailyTotal = Object.values(logData).reduce((mealSum, meal) => mealSum + Object.values(meal).flat().reduce((catSum, food) => catSum + food.calories, 0), 0);
+                    data.push(dailyTotal);
+                }
 
-            function addEventListenersToRenderedItems() {
-                document.querySelectorAll('.add-food-btn').forEach(btn => btn.addEventListener('click', (e) => {
-                    const input = e.currentTarget.previousElementSibling;
-                    addFood(input.dataset.category, input.dataset.meal, input.value);
-                }));
-                document.querySelectorAll('.food-input').forEach(input => input.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') {
-                        addFood(e.target.dataset.category, e.target.dataset.meal, e.target.value);
+                const ctx = document.getElementById('progress-chart').getContext('2d');
+                if (progressChart) {
+                    progressChart.destroy();
+                }
+                progressChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Calorías Consumidas',
+                            data: data,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        }, {
+                            label: 'Objetivo de Calorías',
+                            data: Array(7).fill(state.calorieGoal),
+                            borderColor: '#f59e0b',
+                            borderDash: [5, 5],
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: { y: { beginAtZero: true } }
                     }
-                }));
-                document.querySelectorAll('.remove-food-btn').forEach(btn => btn.addEventListener('click', (e) => {
-                    const { category, meal, index } = e.currentTarget.dataset;
-                    removeFood(category, meal, parseInt(index));
-                }));
-                document.querySelectorAll('.suggestion-pill').forEach(btn => btn.addEventListener('click', (e) => {
-                    const { foodName, category, meal } = e.currentTarget.dataset;
-                    addFood(category, meal, foodName);
-                }));
-                document.querySelectorAll('.generate-image-btn').forEach(btn => btn.addEventListener('click', (e) => {
-                    generatePlateImage(e.currentTarget.dataset.mealKey);
-                }));
-                 document.getElementById('toggle-principles-btn')?.addEventListener('click', (e) => {
-                    const content = document.getElementById('principles-content');
-                    const arrow = document.getElementById('principles-arrow');
-                    content.classList.toggle('open');
-                    arrow.classList.toggle('rotate-180');
                 });
             }
             
-            function setupGlobalListeners() {
-                document.getElementById('date-picker').addEventListener('change', (e) => {
-                    state.selectedDate = e.target.value;
-                    render();
+            function exportRecipesToPDF() {
+                const recipeContent = document.getElementById('recipe-content-container');
+                const doc = new jsPDF();
+
+                html2canvas(recipeContent).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    const imgProps= doc.getImageProperties(imgData);
+                    const pdfWidth = doc.internal.pageSize.getWidth();
+                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                    doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                    doc.save(`recetario-${state.selectedDate}.pdf`);
                 });
+            }
+
+            function addEventListenersToRenderedItems() {
+                document.querySelectorAll('.add-food-btn').forEach(btn => btn.addEventListener('click', (e) => { const input = e.currentTarget.previousElementSibling; addFood(input.dataset.category, input.dataset.meal, input.value); }));
+                document.querySelectorAll('.food-input').forEach(input => input.addEventListener('keypress', (e) => { if (e.key === 'Enter') { addFood(e.target.dataset.category, e.target.dataset.meal, e.target.value); } }));
+                document.querySelectorAll('.remove-food-btn').forEach(btn => btn.addEventListener('click', (e) => { const { category, meal, index } = e.currentTarget.dataset; removeFood(category, meal, parseInt(index)); }));
+                document.querySelectorAll('.suggestion-pill').forEach(btn => btn.addEventListener('click', (e) => { const { foodName, category, meal } = e.currentTarget.dataset; addFood(category, meal, foodName); }));
+                document.querySelectorAll('.generate-image-btn').forEach(btn => btn.addEventListener('click', (e) => { generatePlateImage(e.currentTarget.dataset.mealKey); }));
+                document.getElementById('toggle-principles-btn')?.addEventListener('click', () => { document.getElementById('principles-content').classList.toggle('open'); document.getElementById('principles-arrow').classList.toggle('rotate-180'); });
+            }
+            
+            function setupGlobalListeners() {
+                document.getElementById('date-picker').addEventListener('change', (e) => { state.selectedDate = e.target.value; render(); });
                 document.getElementById('prev-day-btn').addEventListener('click', () => changeDay(-1));
                 document.getElementById('next-day-btn').addEventListener('click', () => changeDay(1));
-
-                const goalModal = document.getElementById('goal-modal');
-                document.getElementById('open-modal-btn').addEventListener('click', () => goalModal.classList.remove('hidden'));
-                document.getElementById('close-modal-btn').addEventListener('click', () => goalModal.classList.add('hidden'));
+                document.getElementById('open-modal-btn').addEventListener('click', () => document.getElementById('goal-modal').classList.remove('hidden'));
+                document.getElementById('close-goal-modal-btn').addEventListener('click', () => document.getElementById('goal-modal').classList.add('hidden'));
                 document.getElementById('calculate-goals-btn').addEventListener('click', handleModalCalculations);
                 document.getElementById('save-goals-btn').addEventListener('click', saveAndApplyGoals);
+                document.getElementById('close-recipe-modal-btn').addEventListener('click', () => document.getElementById('recipe-modal').classList.add('hidden'));
+                document.getElementById('export-pdf-btn').addEventListener('click', exportRecipesToPDF);
+                document.getElementById('progress-btn').addEventListener('click', showProgress);
+                document.getElementById('close-progress-modal-btn').addEventListener('click', () => document.getElementById('progress-modal').classList.add('hidden'));
+                document.getElementById('welcome-define-goals-btn').addEventListener('click', () => document.getElementById('goal-modal').classList.remove('hidden'));
             }
 
             loadState();
